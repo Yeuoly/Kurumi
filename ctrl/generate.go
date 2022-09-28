@@ -3,12 +3,14 @@ package ctrl
 import (
 	"io/ioutil"
 	"os/exec"
+	"regexp"
+
 	"strconv"
 
 	"github.com/Yeuoly/kurumi/parser"
 )
 
-func BuildDstSource(src []byte, method string, key string) []byte {
+func BuildDstSource(src []byte, method string, key string, mixer string) []byte {
 	var p parser.ParserInterface
 	switch method {
 	case "xor":
@@ -63,12 +65,79 @@ int main(int argc, char **argv) {
 	LoadElf((void *)buf, ` + strconv.Itoa(len(src)) + `, argv, environ, &err);
 }
 `
-	return []byte(c_source + code_defination + main_code)
+
+	origin_score := c_source + code_defination + main_code
+
+	//match functions
+	re := regexp.MustCompile(`[\S]+\s+[\S]+\s*\(.*\)\s*\{`)
+	matches := re.FindAllIndex([]byte(origin_score), -1)
+	functions := make([][2]int, len(matches))
+	for i, v := range matches {
+		start_index := v[0]
+		end_index := v[1] - 1
+		quote_counter := 0
+		for end_index < len(origin_score) {
+			if origin_score[end_index] == '{' {
+				quote_counter++
+			} else if origin_score[end_index] == '}' {
+				quote_counter--
+				if quote_counter == 0 {
+					break
+				}
+			}
+			end_index++
+		}
+		functions[i] = [2]int{start_index, end_index}
+	}
+
+	//TODO: dynamic mixer level
+	mixer_level := 1
+	mixer_rate := func() float64 {
+		switch mixer_level {
+		case 1:
+			return 0.2
+		}
+		return 0
+	}()
+
+	is_in_function := func(index int) bool {
+		for _, v := range functions {
+			if index >= v[0] && index <= v[1] {
+				return true
+			}
+		}
+		return false
+	}
+
+	//mixer
+	re = regexp.MustCompile(`[^\n].*\n`)
+	lines := re.FindAllIndex([]byte(origin_score), -1)
+	mix_lines := int(float64(len(lines)) * mixer_rate)
+	interval := len(lines) / mix_lines
+	result := ""
+	for i, v := range lines {
+		if !is_in_function(v[0]) {
+			result += origin_score[v[0]:v[1]] + "\n"
+			continue
+		}
+		if i%interval == 0 {
+			substr := origin_score[v[0]:v[1]]
+			if ok, _ := regexp.MatchString(`;[\s\t]*\n`, substr); ok {
+				result += substr + "\n" + parser.GetMixer(mixer) + "\n"
+			} else {
+				result += substr + "\n"
+			}
+		} else {
+			result += origin_score[v[0]:v[1]] + "\n"
+		}
+	}
+
+	return []byte(result)
 }
 
-func Build(src []byte, method string, key string, dst string) error {
-	src = BuildDstSource(src, method, key)
-
+func Build(src []byte, method string, key string, mixer string, dst string) error {
+	src = BuildDstSource(src, method, key, mixer)
+	//fmt.Println(string(src))
 	//write to tmp file
 	tmpdir, err := ioutil.TempDir("/tmp", "kurumi*")
 	if err != nil {

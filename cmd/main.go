@@ -12,7 +12,7 @@ func main() {
 		panic(err)
 	}
 
-	err = ctrl.Build(filebytes, "kurumi-2", "122", "./cmd/file/out")
+	err = ctrl.Build(filebytes, "kurumi-2", "122", "kurumi-mixer-default-4", "./cmd/file/out")
 	if err != nil {
 		panic(err)
 	}

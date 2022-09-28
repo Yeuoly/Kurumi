@@ -8,6 +8,11 @@
 #include <linux/memfd.h>
 //syscalls
 #include <sys/syscall.h>
+#include <stdint.h>
+
+int empty(int b) {
+    return b;
+}
 
 int memfd_create(const char *name, unsigned int flags) {
     int fd;
