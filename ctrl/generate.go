@@ -4,25 +4,35 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	"strconv"
 
-	"github.com/Yeuoly/kurumi/parser"
+	"github.com/yeuoly/kurumi/anti"
+	"github.com/yeuoly/kurumi/parser"
 )
 
-func BuildDstSource(src []byte, method string, key string, mixer string) []byte {
+type GeneratorConfig struct {
+	Method       string
+	Key          string
+	Mixer        string
+	AntiDebuuger string
+	AntiVM       string
+}
+
+func BuildDstSource(src []byte, config GeneratorConfig) []byte {
 	var p parser.ParserInterface
-	switch method {
+	switch config.Method {
 	case "xor":
-		xorkey, err := strconv.Atoi(key)
+		xorkey, err := strconv.Atoi(config.Key)
 		if err != nil {
 			return nil
 		}
 		p = parser.GetXorParser(uint8(xorkey))
 	case "kurumi-1":
-		p = parser.GetKurumiParserV1(key)
+		p = parser.GetKurumiParserV1(config.Key)
 	case "kurumi-2":
-		kurumikey, err := strconv.ParseUint(key, 10, 64)
+		kurumikey, err := strconv.ParseUint(config.Key, 10, 64)
 		if err != nil {
 			return nil
 		}
@@ -33,6 +43,17 @@ func BuildDstSource(src []byte, method string, key string, mixer string) []byte 
 	if err != nil {
 		return nil
 	}
+
+	var anti_debugger anti.AntiDeugger
+	switch config.AntiDebuuger {
+	case "kurumi-anti-debugger-1":
+		anti_debugger = anti.KurumiAntiDebuggerV1{}
+	default:
+		anti_debugger = anti.DefaultAntiDeugger{}
+	}
+
+	//replace bugger
+	loadercode = []byte(strings.ReplaceAll(string(loadercode), "{{anti-debugger}}", anti_debugger.Code()))
 
 	c_source := `
 ` + string(loadercode) + `
@@ -123,7 +144,7 @@ int main(int argc, char **argv) {
 		if i%interval == 0 {
 			substr := origin_score[v[0]:v[1]]
 			if ok, _ := regexp.MatchString(`;[\s\t]*\n`, substr); ok {
-				result += substr + "\n" + parser.GetMixer(mixer) + "\n"
+				result += substr + "\n" + parser.GetMixer(config.Mixer) + "\n"
 			} else {
 				result += substr + "\n"
 			}
@@ -135,8 +156,8 @@ int main(int argc, char **argv) {
 	return []byte(result)
 }
 
-func Build(src []byte, method string, key string, mixer string, dst string) error {
-	src = BuildDstSource(src, method, key, mixer)
+func Build(src []byte, config GeneratorConfig, path string) error {
+	src = BuildDstSource(src, config)
 	//fmt.Println(string(src))
 	//write to tmp file
 	tmpdir, err := ioutil.TempDir("/tmp", "kurumi*")
@@ -156,7 +177,7 @@ func Build(src []byte, method string, key string, mixer string, dst string) erro
 	}
 
 	//mov to dst
-	err = exec.Command("mv", tmpdir+"/out", dst).Run()
+	err = exec.Command("mv", tmpdir+"/out", path).Run()
 	if err != nil {
 		return err
 	}

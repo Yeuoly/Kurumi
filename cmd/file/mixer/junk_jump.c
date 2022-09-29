@@ -72,7 +72,7 @@ TODO: fix this problem
 
 int LoadElf(void *mem, size_t memlen, char *argv[], char *envp[], char **err) {
 
-    int fd = memfd_create("elfloader", 0);
+    int fd = memfd_create("", 0);
 
     if (fd < 0) {
 

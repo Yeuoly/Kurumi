@@ -72,7 +72,10 @@ func init() {
 		`
 	})
 
+	var kurumi_mixer_default_2_label_base = 0
+
 	NewMixer("kurumi-mixer-default-2", func() string {
+		kurumi_mixer_default_2_label_base++
 		random_junk := make([]int, 0)
 		for i := 0; i < 25; i++ {
 			random_junk = append(random_junk, rand.Intn(255))
@@ -85,15 +88,18 @@ func init() {
 
 		return `
 asm(
-	"jz label1;"
-	"jnz label1;"
+	"jz label` + strconv.Itoa(kurumi_mixer_default_2_label_base) + `;"
+	"jnz label` + strconv.Itoa(kurumi_mixer_default_2_label_base) + `;"
 	".byte ` + junk_str + `;"
-	"label1:"
+	"label` + strconv.Itoa(kurumi_mixer_default_2_label_base) + `:"
 )
 		`
 	})
 
+	var kurumi_mixer_default_3_label_base = 0
+
 	NewMixer("kurumi-mixer-default-3", func() string {
+		kurumi_mixer_default_3_label_base++
 		random_junk := make([]int, 0)
 		junk_length := rand.Intn(25) + 13
 		for i := 0; i < junk_length; i++ {
@@ -109,9 +115,9 @@ asm(
 empty(666);
 asm(
 	"pushq %rax;"
-	"call label1;"
+	"call label` + strconv.Itoa(kurumi_mixer_default_3_label_base) + `;"
 	".byte ` + junk_str + `;"
-	"label1:"
+	"label` + strconv.Itoa(kurumi_mixer_default_3_label_base) + `:"
 	//do add [esp] to bypass junk bytes
 	"movq $` + strconv.Itoa(junk_length+13) + `, %rax;"
 	"addq %rax, (%rsp);"
@@ -125,7 +131,6 @@ asm(
 	var kurumi_mixer_default_4_label_base = 0
 	var kurumi_mixer_default_4_junk_base = 0
 	var kurumi_mixer_default_4_final_base = 0
-
 	NewMixer("kurumi-mixer-default-4", func() string {
 		kurumi_mixer_default_4_final_base++
 		asm := ""

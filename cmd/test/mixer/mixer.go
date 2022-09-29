@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/Yeuoly/kurumi/parser"
+	"github.com/yeuoly/kurumi/parser"
 )
 
 func main() {
