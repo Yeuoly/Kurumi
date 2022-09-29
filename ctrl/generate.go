@@ -20,6 +20,18 @@ type GeneratorConfig struct {
 	AntiVM       string
 }
 
+func ListMixers() []string {
+	return parser.ListMixer()
+}
+
+func ListParsers() []string {
+	return parser.ListParser()
+}
+
+func ListAntiDebuggers() []string {
+	return anti.ListAntiDebuggers()
+}
+
 func BuildDstSource(src []byte, config GeneratorConfig) []byte {
 	var p parser.ParserInterface
 	switch config.Method {

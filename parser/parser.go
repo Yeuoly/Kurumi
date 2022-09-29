@@ -12,3 +12,7 @@ type ParserInterface interface {
 	*/
 	DecryptSourceCode() []uint8
 }
+
+func ListParser() []string {
+	return []string{"xor", "kurumi-1", "kurumi-2"}
+}

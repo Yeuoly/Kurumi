@@ -44,6 +44,14 @@ func GetMixer(name string) string {
 	return defaultMixer.GetMixer(name)
 }
 
+func ListMixer() []string {
+	var list []string
+	for _, mix := range defaultMixer.mixes {
+		list = append(list, mix.Name)
+	}
+	return list
+}
+
 func init() {
 	rand.Seed(time.Now().Unix())
 
