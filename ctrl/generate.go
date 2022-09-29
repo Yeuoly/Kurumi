@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/yeuoly/kurumi/anti"
+	"github.com/yeuoly/kurumi/loader/linux"
 	"github.com/yeuoly/kurumi/parser"
 )
 
@@ -51,10 +52,7 @@ func BuildDstSource(src []byte, config GeneratorConfig) []byte {
 		p = parser.GetKurumiParserV2(kurumikey)
 	}
 
-	loadercode, err := ioutil.ReadFile("./loader/linux/x86.c")
-	if err != nil {
-		return nil
-	}
+	loadercode := linux.GetLinuxLoader()
 
 	var anti_debugger anti.AntiDeugger
 	switch config.AntiDebuuger {
@@ -65,10 +63,10 @@ func BuildDstSource(src []byte, config GeneratorConfig) []byte {
 	}
 
 	//replace bugger
-	loadercode = []byte(strings.ReplaceAll(string(loadercode), "{{anti-debugger}}", anti_debugger.Code()))
+	loadercode = strings.ReplaceAll(loadercode, "{{anti-debugger}}", anti_debugger.Code())
 
 	c_source := `
-` + string(loadercode) + `
+` + loadercode + `
 ` + string(p.DecryptSourceCode()) + `
 `
 
