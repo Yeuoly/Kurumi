@@ -23,6 +23,7 @@ func (p XorParser) DecryptSourceCode() []uint8 {
 #include <stdint.h>
 void de(uint8_t *data, uint32_t len, uint8_t *dst, uint32_t dstlen) {
 	for (uint32_t i = 0; i < len; i++) {
+		empty(9789);
 		dst[i] = data[i] ^ ` + strconv.Itoa(int(p.key)) + `;
 	}
 }

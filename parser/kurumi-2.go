@@ -98,6 +98,8 @@ void de(uint8_t *data, uint32_t len, uint8_t *dst, uint32_t dstlen) {
 		{0x45, 0x22, 0x11, 0x9a, 0xb3, 0x4f, 0x7c, 0x0a},
 	};
 
+	empty(23465);
+
 	uint32_t unit_index = 0;
 	uint32_t dst_index = 0;
 	uint32_t j = 0;
