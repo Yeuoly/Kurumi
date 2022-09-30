@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	filebytes, err := ioutil.ReadFile("./cmd/file/elf")
+	filebytes, err := ioutil.ReadFile("./cmd/file/test")
 	if err != nil {
 		panic(err)
 	}

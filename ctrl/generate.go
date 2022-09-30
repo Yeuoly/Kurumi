@@ -73,16 +73,11 @@ func BuildDstSource(src []byte, config GeneratorConfig) []byte {
 	enc := p.Encrypt(src)
 
 	code_defination := `
-char *code = "`
-	for _, v := range enc {
-		current := `\x` + strconv.FormatInt(int64(v), 16)
-		//pad 0
-		if len(current) == 3 {
-			current = `\x0` + strconv.FormatInt(int64(v), 16)
-		}
-		code_defination += current
+char code[] = {`
+	for _, v := range enc[:len(enc)-1] {
+		code_defination += strconv.Itoa(int(v)) + ","
 	}
-	code_defination += `";
+	code_defination += strconv.Itoa(int(enc[len(enc)-1])) + `};
 `
 
 	main_code := `
@@ -91,7 +86,6 @@ extern char **environ;
 int main(int argc, char **argv) {
 	char buf[` + strconv.Itoa(len(src)) + `] = { 0 };
 	char *err = NULL;
-	memcpy(buf, code, ` + strconv.Itoa(len(src)) + `);
 	de(code, ` + strconv.Itoa(len(enc)) + `, buf, ` + strconv.Itoa(len(src)) + `);
 	LoadElf((void *)buf, ` + strconv.Itoa(len(src)) + `, argv, environ, &err);
 }
@@ -168,7 +162,6 @@ int main(int argc, char **argv) {
 
 func Build(src []byte, config GeneratorConfig, path string) error {
 	src = BuildDstSource(src, config)
-	//fmt.Println(string(src))
 	//write to tmp file
 	tmpdir, err := ioutil.TempDir("/tmp", "kurumi*")
 	if err != nil {
